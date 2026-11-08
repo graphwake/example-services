@@ -270,6 +270,11 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "giftNote": {
+            "type": "string",
+            "maxLength": 280,
+            "description": "Message printed on the packing slip."
           }
         }
       }
