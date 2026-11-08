@@ -53,8 +53,9 @@ as no change at all. To retry only a failed upload, run **Upload orders spec to 
 1. **Create the `catalog` service** with a **URL** source:
    `https://raw.githubusercontent.com/graphwake/example-services/main/services/catalog/openapi.json`
    Graphwake checks it every 30 minutes.
-2. **Create the `orders` service** with a **CI** source. Copy its ingest key into this repository's secrets as
-   `GRAPHWAKE_KEY` (Settings → Secrets and variables → Actions).
+2. **Create the `orders` service** with a **CI** source. Copy its ingest key into the `prod` environment's secrets as
+   `GRAPHWAKE_KEY` (Settings → Environments → prod → Environment secrets). The upload job names that environment;
+   don't give it required reviewers or a wait timer, or the scheduled uploads will wait for someone to approve them.
 3. **Subscribe a team** to `GET /products/{id}` and `GET /orders/{id}`, and turn on **All changes** in the team's Notifications
    tab. With breaking changes only, steps 1 and 4 send nothing.
 4. **Add yourself to that team.**

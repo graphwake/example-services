@@ -18,6 +18,7 @@ concurrency:
 jobs:
   upload:
     runs-on: ubuntu-latest
+    environment: prod # GRAPHWAKE_KEY is a secret of this environment
     steps:
       - uses: actions/checkout@v4
       - uses: graphwake/agent/github-action@v0.1.0
