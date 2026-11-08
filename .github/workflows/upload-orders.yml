@@ -1,0 +1,26 @@
+# Sends the orders spec to Graphwake. This is the snippet to copy into your own repository.
+name: Upload orders spec to Graphwake
+
+on:
+  push:
+    branches: [main]
+    paths: ["services/orders/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: upload-orders
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graphwake/agent/github-action@v0.1.0
+        with:
+          spec: services/orders/openapi.json
+          key: ${{ secrets.GRAPHWAKE_KEY }}

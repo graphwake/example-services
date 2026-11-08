@@ -1,0 +1,49 @@
+# Changes both specs twice a day (09:00 and 15:00 Europe/Istanbul) so Graphwake has something to report.
+# The orders upload runs in its own workflow run: the Graphwake agent only sends the spec of the branch tip,
+# and this run's GITHUB_SHA is the commit before the change.
+name: Change the specs
+
+on:
+  schedule:
+    - cron: "0 6,12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: mutate
+  cancel-in-progress: false
+
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Apply the next step
+        run: node scripts/mutate.mjs > "$RUNNER_TEMP/msg"
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json services
+          git commit -F "$RUNNER_TEMP/msg"
+          git push origin HEAD:main
+          {
+            echo '```'
+            cat "$RUNNER_TEMP/msg"
+            echo '```'
+            echo
+            echo "Commit: \`$(git rev-parse --short HEAD)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the orders spec
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run upload-orders.yml --ref main
