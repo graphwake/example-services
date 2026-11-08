@@ -23,13 +23,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0 # the guard reads when state.json last changed
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm test
       - name: Apply the next step
-        run: node scripts/mutate.mjs > "$RUNNER_TEMP/msg"
+        id: step
+        run: |
+          node scripts/mutate.mjs --guard > "$RUNNER_TEMP/msg"
+          if [ -s "$RUNNER_TEMP/msg" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipped: the specs changed less than 35 minutes ago." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Commit and push
+        if: steps.step.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -44,6 +53,7 @@ jobs:
             echo "Commit: \`$(git rev-parse --short HEAD)\`"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload the orders spec
+        if: steps.step.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run upload-orders.yml --ref main

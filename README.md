@@ -44,7 +44,9 @@ The run commits to `main` and then starts [Upload orders spec to Graphwake](.git
 separate run. They are kept apart because the agent only sends the spec of the branch's newest commit, and a run that
 pushes a new commit is no longer building the newest one.
 
-To change the specs by hand: **Actions → Change the specs → Run workflow**.
+To change the specs by hand: **Actions → Change the specs → Run workflow**. A run within 35 minutes of the last change
+does nothing: the steps come in pairs that undo each other, so two changes inside one URL check would reach Graphwake
+as no change at all. To retry only a failed upload, run **Upload orders spec to Graphwake** by hand instead.
 
 ## Set it up in your Graphwake workspace
 

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { mutate, render } from "../scripts/mutate.mjs";
+import { mutate, render, tooSoon, MIN_GAP_MINUTES } from "../scripts/mutate.mjs";
 import { SERVICES } from "../scripts/specs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -83,4 +83,42 @@ test("CLI prints the commit message", () => {
 test("committed files match the committed state", () => {
   const { step } = JSON.parse(read(REPO, "state.json"));
   for (const s of SERVICES) assert.equal(specFile(REPO, s), render(s, step), `${s} is out of sync with state.json`);
+});
+
+test("tooSoon blocks a change within the minimum gap", () => {
+  const now = Date.parse("2026-11-07T06:30:00Z");
+  assert.equal(MIN_GAP_MINUTES, 35);
+  assert.equal(tooSoon(now - 10 * 60_000, now), true);
+  assert.equal(tooSoon(now - 34 * 60_000, now), true);
+  assert.equal(tooSoon(now - 35 * 60_000, now), false);
+  assert.equal(tooSoon(now - 6 * 3600_000, now), false);
+  assert.equal(tooSoon(null, now), false);
+});
+
+test("CLI --guard skips with empty stdout when the last change is too recent", () => {
+  const root = fixture('{ "step": 4 }\n');
+  const git = (...a) => spawnSync("git", a, { cwd: root, encoding: "utf8" });
+  git("init", "-q");
+  git("add", ".");
+  git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init");
+  const before = SERVICES.map((s) => specFile(root, s));
+  const cli = spawnSync(process.execPath, [CLI, "--guard", root], { encoding: "utf8" });
+  assert.equal(cli.status, 0);
+  assert.equal(cli.stdout, "");
+  assert.match(cli.stderr, /skipped/);
+  assert.deepEqual(SERVICES.map((s) => specFile(root, s)), before);
+  assert.deepEqual(JSON.parse(read(root, "state.json")), { step: 4 });
+});
+
+test("CLI --guard applies the step when the last change is old", () => {
+  const root = fixture('{ "step": 4 }\n');
+  const old = "2026-01-01T00:00:00Z";
+  const env = { ...process.env, GIT_AUTHOR_DATE: old, GIT_COMMITTER_DATE: old };
+  const git = (...a) => spawnSync("git", a, { cwd: root, encoding: "utf8", env });
+  git("init", "-q");
+  git("add", ".");
+  git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init");
+  const cli = spawnSync(process.execPath, [CLI, "--guard", root], { encoding: "utf8" });
+  assert.equal(cli.status, 0);
+  assert.match(cli.stdout, /^chore\(specs\): step 1 of 4/);
 });
