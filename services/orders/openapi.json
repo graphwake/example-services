@@ -67,38 +67,6 @@
         }
       }
     },
-    "/orders/{id}": {
-      "get": {
-        "operationId": "getOrder",
-        "summary": "Get an order",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Order id",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
     "/orders/{id}/cancel": {
       "post": {
         "operationId": "cancelOrder",
@@ -236,40 +204,6 @@
           },
           "total": {
             "$ref": "#/components/schemas/Money"
-          }
-        }
-      },
-      "OrderDetail": {
-        "type": "object",
-        "required": [
-          "id",
-          "customerId",
-          "status",
-          "lines",
-          "total"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "customerId": {
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/OrderStatus"
-          },
-          "lines": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrderLine"
-            }
-          },
-          "total": {
-            "$ref": "#/components/schemas/Money"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       }
