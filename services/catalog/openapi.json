@@ -195,11 +195,6 @@
           "stock": {
             "type": "integer",
             "minimum": 0
-          },
-          "warrantyMonths": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Warranty length in months."
           }
         }
       },
