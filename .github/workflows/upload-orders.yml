@@ -21,7 +21,7 @@ jobs:
     environment: prod # GRAPHWAKE_KEY is a secret of this environment
     steps:
       - uses: actions/checkout@v4
-      - uses: graphwake/agent/github-action@v0.1.0
+      - uses: graphwake/agent/github-action@v0.2.0
         with:
           spec: services/orders/openapi.json
           key: ${{ secrets.GRAPHWAKE_KEY }}
