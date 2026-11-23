@@ -14,8 +14,12 @@ There is no running server: the services exist only as OpenAPI documents.
 
 | Service | Spec | Graphwake source | Endpoints | Watched endpoint |
 |---|---|---|---|---|
-| `catalog` | [`services/catalog/openapi.json`](services/catalog/openapi.json) | URL | `GET /products`, `GET /products/{id}`, `GET /categories`, `GET /categories/{id}` | `GET /products/{id}` |
+| `catalog` | [`services/catalog/openapi.json`](services/catalog/openapi.json) | URL | `GET /products`, `GET /products/{id}`, `GET /categories`, `GET /categories/{id}` (deprecated, sunset 2026-12-01) | `GET /products/{id}` |
 | `orders` | [`services/orders/openapi.json`](services/orders/openapi.json) | CI | `GET /orders`, `POST /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel` | `GET /orders/{id}` |
+
+`catalog`'s `GET /categories/{id}` is marked `deprecated: true` with `x-sunset: 2026-12-01` at every step of the cycle. It
+never changes, so it only produces Graphwake's deprecation and sunset notices: the reminders before the sunset date, then
+one message a week while it stays in the spec.
 
 `orders` uses products from `catalog`: an order line carries a `Product`. `orders` keeps its own copy of the `Product`
 schema with the same name on purpose. Graphwake's Discovery uses matching schema names as a signal when it suggests
@@ -57,7 +61,8 @@ as no change at all. To retry only a failed upload, run **Upload orders spec to 
    `GRAPHWAKE_KEY` (Settings → Environments → prod → Environment secrets). The upload job names that environment;
    don't give it required reviewers or a wait timer, or the scheduled uploads will wait for someone to approve them.
 3. **Subscribe a team** to `GET /products/{id}` and `GET /orders/{id}`, and turn on **All changes** in the team's Notifications
-   tab. With breaking changes only, steps 1 and 4 send nothing.
+   tab. With breaking changes only, steps 1 and 4 send nothing. Subscribe the same team to `GET /categories/{id}` too, for
+   the deprecation and sunset notices.
 4. **Add yourself to that team.**
 
 To send your own service's spec from CI, copy [`.github/workflows/upload-orders.yml`](.github/workflows/upload-orders.yml)
@@ -78,6 +83,11 @@ If an e-mail is missing, check in this order:
    The agent never fails the workflow, so a green run can still have sent nothing.
 3. In Graphwake, the `catalog` service's last URL check and its status.
 4. The team's subscriptions and its **All changes** setting.
+
+The deprecated `GET /categories/{id}` sends its own notices to the team subscribed to it: an announcement when Graphwake
+first sees it deprecated, reminders 30, 7 and 1 day before its sunset date (only those whose window opens after that), then after
+1 December 2026 one "Past their sunset date" message a week, sent from Monday 08:00 UTC. The team that owns `catalog`, if one is set,
+gets a weekly summary as well. A missing weekly message means Graphwake's weekly sunset job is broken.
 
 GitHub turns off scheduled workflows in a repository with no activity for 60 days. The bot's commits count as
 activity, so this should not happen while the workflow runs.

@@ -13,6 +13,9 @@ export const WATCHED = {
   orders: { method: "get", path: "/orders/{id}", schema: "OrderDetail", field: "giftNote" },
 };
 
+// A fixed endpoint that stays deprecated through the whole cycle.
+export const DEPRECATED = { service: "catalog", method: "get", path: "/categories/{id}", sunset: "2026-12-01" };
+
 const FIELDS = {
   catalog: { type: "integer", minimum: 0, description: "Warranty length in months." },
   orders: { type: "string", maxLength: 280, description: "Message printed on the packing slip." },
@@ -73,10 +76,14 @@ const BASE = {
           responses: { 200: json({ type: "array", items: ref("Category") }) },
         },
       },
+      // Deprecated at every step, with a fixed sunset date: the Graphwake team's watch on its deprecation and sunset
+      // notices (the reminders before the date, then a weekly message while it stays in the spec).
       "/categories/{id}": {
         get: {
           operationId: "getCategory",
           summary: "Get a category",
+          deprecated: true,
+          "x-sunset": DEPRECATED.sunset,
           parameters: [idParam("Category id")],
           responses: { 200: json(ref("Category")), 404: notFound },
         },

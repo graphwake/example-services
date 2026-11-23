@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SERVICES, WATCHED, specFor, describeStep } from "../scripts/specs.mjs";
+import { SERVICES, WATCHED, DEPRECATED, specFor, describeStep } from "../scripts/specs.mjs";
 
 const METHODS = ["get", "put", "post", "delete", "patch", "head", "options", "trace"];
 
@@ -126,6 +126,30 @@ test("POST /orders references Product through its line items", () => {
     return false;
   };
   assert.ok(reaches(spec.paths["/orders"].post));
+});
+
+test("catalog's deprecated endpoint stays deprecated, with the same sunset date, at every step", () => {
+  assert.notEqual(`${DEPRECATED.method} ${DEPRECATED.path}`, `${WATCHED.catalog.method} ${WATCHED.catalog.path}`);
+  for (let step = 1; step <= 4; step++) {
+    const op = specFor(DEPRECATED.service, step).paths[DEPRECATED.path][DEPRECATED.method];
+    assert.equal(op.deprecated, true, `step ${step}`);
+    assert.equal(op["x-sunset"], DEPRECATED.sunset, `step ${step}`);
+    assert.match(op["x-sunset"], /^\d{4}-\d{2}-\d{2}$/);
+  }
+});
+
+test("no other operation is deprecated", () => {
+  for (const s of SERVICES) {
+    for (let step = 1; step <= 4; step++) {
+      for (const [path, item] of Object.entries(specFor(s, step).paths)) {
+        for (const [method, op] of Object.entries(item)) {
+          if (s === DEPRECATED.service && path === DEPRECATED.path && method === DEPRECATED.method) continue;
+          assert.equal(op.deprecated, undefined, `${s} step ${step}: ${method} ${path}`);
+          assert.equal(op["x-sunset"], undefined, `${s} step ${step}: ${method} ${path}`);
+        }
+      }
+    }
+  }
 });
 
 test("specFor rejects unknown service or step", () => {

@@ -98,6 +98,8 @@
       "get": {
         "operationId": "getCategory",
         "summary": "Get a category",
+        "deprecated": true,
+        "x-sunset": "2026-12-01",
         "parameters": [
           {
             "name": "id",
