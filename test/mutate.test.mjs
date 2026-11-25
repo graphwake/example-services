@@ -6,7 +6,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { mutate, render, tooSoon, MIN_GAP_MINUTES } from "../scripts/mutate.mjs";
-import { SERVICES } from "../scripts/specs.mjs";
+import { SERVICES, FILES } from "../scripts/specs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = path.join(REPO, "scripts", "mutate.mjs");
@@ -15,14 +15,14 @@ function fixture(state) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "example-services-"));
   for (const s of SERVICES) {
     fs.mkdirSync(path.join(root, "services", s), { recursive: true });
-    fs.writeFileSync(path.join(root, "services", s, "openapi.json"), render(s, 4));
+    fs.writeFileSync(path.join(root, "services", s, FILES[s]), render(s, 4));
   }
   if (state !== undefined) fs.writeFileSync(path.join(root, "state.json"), state);
   return root;
 }
 
 const read = (root, ...p) => fs.readFileSync(path.join(root, ...p), "utf8");
-const specFile = (root, s) => read(root, "services", s, "openapi.json");
+const specFile = (root, s) => read(root, "services", s, FILES[s]);
 
 test("first run from initial state goes to step 1", () => {
   const root = fixture('{ "step": 4 }\n');
@@ -35,6 +35,9 @@ test("first run from initial state goes to step 1", () => {
   assert.equal(lines[1], "");
   assert.equal(lines[2], "catalog: add optional field ProductDetail.warrantyMonths (non-breaking)");
   assert.equal(lines[3], "orders: add optional field OrderDetail.giftNote (non-breaking)");
+  assert.equal(lines[4], "inventory: add optional field ItemDetail.binLocation (non-breaking)");
+  assert.equal(lines[5], "shipping: add optional field models.ShipmentDetail.carrierNote (non-breaking)");
+  assert.equal(lines.length, 6);
 });
 
 test("commit message first lines for every step", () => {

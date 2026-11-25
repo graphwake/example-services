@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Applies the next step of the change cycle to both services.
+// Applies the next step of the change cycle to every service.
 // Usage: node scripts/mutate.mjs [--guard] [rootDir]
 // Prints the commit message on stdout. Exits 1 (and writes nothing) when state.json is missing or invalid.
 // --guard: when state.json was last committed less than MIN_GAP_MINUTES ago, change nothing, print nothing on
@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { SERVICES, specFor, describeStep } from "./specs.mjs";
+import { SERVICES, FILES, specFor, describeStep } from "./specs.mjs";
 
 const SHORT = {
   1: "add optional fields",
@@ -33,7 +33,52 @@ function lastChangeAt(root) {
 }
 
 export function render(service, step) {
-  return JSON.stringify(specFor(service, step), null, 2) + "\n";
+  const spec = specFor(service, step);
+  if (!FILES[service].endsWith(".yaml")) return JSON.stringify(spec, null, 2) + "\n";
+  // Go swag-style YAML. The version goes first and unquoted, so YAML reads it as the number 2.0, not the string "2.0".
+  const { swagger, ...rest } = spec;
+  return `swagger: ${swagger}\n` + toYaml(rest);
+}
+
+// A small deterministic YAML emitter for the documents above: block style, keys in insertion order, sequences at
+// their parent key's indent (as swag writes them), strings quoted unless plainly safe.
+const PLAIN = /^[A-Za-z\/$][A-Za-z0-9 _.,\/{}()$-]*$/;
+const RESERVED = /^(true|false|null|yes|no|on|off|y|n)$/i;
+
+function scalar(v) {
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (v === null) return "null";
+  if (typeof v !== "string") throw new Error(`yaml: unsupported value ${String(v)}`);
+  if (v.includes("\n")) throw new Error(`yaml: multi-line string ${JSON.stringify(v)}`);
+  if (PLAIN.test(v) && !RESERVED.test(v) && v.trim() === v) return v;
+  return `'${v.replaceAll("'", "''")}'`;
+}
+
+const nested = (v) => v !== null && typeof v === "object" && Object.keys(v).length > 0;
+const inline = (v) => (Array.isArray(v) ? "[]" : v !== null && typeof v === "object" ? "{}" : scalar(v));
+
+function block(value, pad) {
+  const lines = [];
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (!nested(item)) lines.push(`${pad}- ${inline(item)}`);
+      else {
+        const inner = block(item, pad + "  ");
+        lines.push(`${pad}- ${inner[0].slice(pad.length + 2)}`, ...inner.slice(1));
+      }
+    }
+  } else {
+    for (const [k, v] of Object.entries(value)) {
+      const key = `${pad}${scalar(k)}:`;
+      if (!nested(v)) lines.push(`${key} ${inline(v)}`);
+      else lines.push(key, ...block(v, Array.isArray(v) ? pad : pad + "  "));
+    }
+  }
+  return lines;
+}
+
+export function toYaml(value) {
+  return block(value, "").join("\n") + "\n";
 }
 
 function readState(root) {
@@ -54,7 +99,7 @@ function readState(root) {
 export function mutate(root) {
   const step = (readState(root) % 4) + 1;
   // Render everything before writing anything.
-  const files = SERVICES.map((s) => [path.join(root, "services", s, "openapi.json"), render(s, step)]);
+  const files = SERVICES.map((s) => [path.join(root, "services", s, FILES[s]), render(s, step)]);
   for (const [file, body] of files) fs.writeFileSync(file, body);
   fs.writeFileSync(path.join(root, "state.json"), JSON.stringify({ step }) + "\n");
   const message = [`chore(specs): step ${step} of 4: ${SHORT[step]}`, "", ...SERVICES.map((s) => describeStep(s, step))].join("\n");

@@ -1,6 +1,6 @@
-# Changes both specs twice a day (09:00 and 15:00 Europe/Istanbul) so Graphwake has something to report.
-# The orders upload runs in its own workflow run: the Graphwake agent only sends the spec of the branch tip,
-# and this run's GITHUB_SHA is the commit before the change.
+# Changes all four specs twice a day (09:00 and 15:00 Europe/Istanbul) so Graphwake has something to report.
+# The orders and inventory uploads run in their own workflow runs: the Graphwake agent only sends the spec of the
+# branch tip, and this run's GITHUB_SHA is the commit before the change.
 name: Change the specs
 
 on:
@@ -57,3 +57,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run upload-orders.yml --ref main
+      - name: Upload the inventory spec
+        if: steps.step.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run upload-inventory.yml --ref main

@@ -1,0 +1,163 @@
+swagger: 2.0
+info:
+  description: Shipments and their tracking events. Example service for Graphwake (URL source, Swagger 2.0).
+  title: Shipping API
+  contact: {}
+  version: '1.0'
+basePath: /shipping/v1
+paths:
+  /shipments:
+    get:
+      description: List shipments, newest first
+      produces:
+      - application/json
+      tags:
+      - shipments
+      summary: List shipments
+      parameters:
+      - type: string
+        description: Filter by status
+        name: status
+        in: query
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.Shipment'
+    post:
+      description: Create a shipment for an order
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - shipments
+      summary: Create a shipment
+      parameters:
+      - description: Shipment to create
+        name: shipment
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewShipment'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Shipment'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+  /shipments/{id}:
+    get:
+      description: Get a shipment by id
+      produces:
+      - application/json
+      tags:
+      - shipments
+      summary: Get a shipment
+      parameters:
+      - type: string
+        description: Shipment id
+        name: id
+        in: path
+        required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ShipmentDetail'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+  /shipments/{id}/tracking:
+    get:
+      description: Tracking events of a shipment, oldest first
+      produces:
+      - application/json
+      tags:
+      - shipments
+      summary: Get tracking events
+      parameters:
+      - type: string
+        description: Shipment id
+        name: id
+        in: path
+        required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.TrackingEvent'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+definitions:
+  httputil.HTTPError:
+    type: object
+    properties:
+      code:
+        type: integer
+        example: 400
+      message:
+        type: string
+        example: status bad request
+  models.NewShipment:
+    type: object
+    required:
+    - orderId
+    - carrier
+    properties:
+      carrier:
+        type: string
+        example: dhl
+      orderId:
+        type: string
+  models.Shipment:
+    type: object
+    properties:
+      id:
+        type: string
+      orderId:
+        type: string
+      status:
+        $ref: '#/definitions/models.ShipmentStatus'
+  models.ShipmentDetail:
+    type: object
+    properties:
+      carrier:
+        type: string
+      events:
+        type: array
+        items:
+          $ref: '#/definitions/models.TrackingEvent'
+      id:
+        type: string
+      orderId:
+        type: string
+      shippedAt:
+        type: string
+      status:
+        $ref: '#/definitions/models.ShipmentStatus'
+  models.ShipmentStatus:
+    type: string
+    enum:
+    - created
+    - in_transit
+    - delivered
+  models.TrackingEvent:
+    type: object
+    properties:
+      at:
+        type: string
+      location:
+        type: string
+      status:
+        type: string

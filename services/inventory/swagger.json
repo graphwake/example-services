@@ -1,0 +1,226 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "Inventory API",
+    "description": "Stock levels per item. Example service for Graphwake (CI source, Swagger 2.0)."
+  },
+  "host": "api.example.com",
+  "basePath": "/inventory",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/items": {
+      "get": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "List items",
+        "operationId": "Items_List",
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Item"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Create an item",
+        "operationId": "Items_Create",
+        "parameters": [
+          {
+            "name": "item",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NewItem"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Item"
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/items/{sku}": {
+      "get": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Get an item",
+        "operationId": "Items_GetBySku",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ItemDetail"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/items/{sku}/stock": {
+      "put": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Set the stock of an item",
+        "operationId": "Items_UpdateStock",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "update",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StockUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Item"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Item": {
+      "type": "object",
+      "required": [
+        "sku",
+        "name",
+        "quantityOnHand"
+      ],
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "quantityOnHand": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "NewItem": {
+      "type": "object",
+      "required": [
+        "sku",
+        "name"
+      ],
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "warehouseId": {
+          "type": "string"
+        }
+      }
+    },
+    "ItemDetail": {
+      "type": "object",
+      "required": [
+        "sku",
+        "name",
+        "quantityOnHand",
+        "warehouseId"
+      ],
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "quantityOnHand": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "reorderLevel": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "warehouseId": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "format": "date-time",
+          "type": "string"
+        }
+      }
+    },
+    "StockUpdate": {
+      "type": "object",
+      "required": [
+        "quantityOnHand"
+      ],
+      "properties": {
+        "quantityOnHand": {
+          "format": "int32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

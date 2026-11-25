@@ -1,0 +1,27 @@
+# Sends the inventory spec (Swagger 2.0) to Graphwake. Graphwake converts it to OpenAPI 3.0 on arrival.
+name: Upload inventory spec to Graphwake
+
+on:
+  push:
+    branches: [main]
+    paths: ["services/inventory/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: upload-inventory
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    environment: prod # GRAPHWAKE_KEY_INVENTORY is a secret of this environment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graphwake/agent/github-action@v0.2.0
+        with:
+          spec: services/inventory/swagger.json
+          key: ${{ secrets.GRAPHWAKE_KEY_INVENTORY }}
