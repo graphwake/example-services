@@ -146,10 +146,6 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/models.ShipmentStatus'
-      carrierNote:
-        type: string
-        description: Free-text note from the carrier
-        example: Leave at the front desk
   models.ShipmentStatus:
     type: string
     enum:
