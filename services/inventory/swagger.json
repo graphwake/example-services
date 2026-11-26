@@ -206,6 +206,10 @@
         "updatedAt": {
           "format": "date-time",
           "type": "string"
+        },
+        "binLocation": {
+          "type": "string",
+          "description": "Shelf position in the warehouse, for example A-12-3."
         }
       }
     },
