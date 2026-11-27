@@ -51,6 +51,29 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+  /shipments/{id}:
+    get:
+      description: Get a shipment by id
+      produces:
+      - application/json
+      tags:
+      - shipments
+      summary: Get a shipment
+      parameters:
+      - type: string
+        description: Shipment id
+        name: id
+        in: path
+        required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ShipmentDetail'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
   /shipments/{id}/tracking:
     get:
       description: Tracking events of a shipment, oldest first
@@ -103,6 +126,23 @@ definitions:
       id:
         type: string
       orderId:
+        type: string
+      status:
+        $ref: '#/definitions/models.ShipmentStatus'
+  models.ShipmentDetail:
+    type: object
+    properties:
+      carrier:
+        type: string
+      events:
+        type: array
+        items:
+          $ref: '#/definitions/models.TrackingEvent'
+      id:
+        type: string
+      orderId:
+        type: string
+      shippedAt:
         type: string
       status:
         $ref: '#/definitions/models.ShipmentStatus'
