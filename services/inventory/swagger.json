@@ -73,34 +73,6 @@
         }
       }
     },
-    "/items/{sku}": {
-      "get": {
-        "tags": [
-          "Items"
-        ],
-        "summary": "Get an item",
-        "operationId": "Items_GetBySku",
-        "parameters": [
-          {
-            "name": "sku",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/ItemDetail"
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
     "/items/{sku}/stock": {
       "put": {
         "tags": [
@@ -173,38 +145,6 @@
           "type": "string"
         },
         "warehouseId": {
-          "type": "string"
-        }
-      }
-    },
-    "ItemDetail": {
-      "type": "object",
-      "required": [
-        "sku",
-        "name",
-        "quantityOnHand",
-        "warehouseId"
-      ],
-      "properties": {
-        "sku": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "quantityOnHand": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "reorderLevel": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "warehouseId": {
-          "type": "string"
-        },
-        "updatedAt": {
-          "format": "date-time",
           "type": "string"
         }
       }
